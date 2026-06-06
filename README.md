@@ -1,19 +1,33 @@
-# Workshop1
+# Top 3 Films Finder
 
-A workshop project repository.
+A Next.js web app to find the top 3 films of popular Bollywood actors.
 
-## About
+## Features
 
-This repository contains materials and files for Workshop 1.
+- Search by actor name (Aamir Khan, Shah Rukh Khan, Amitabh Bachchan, Salman Khan, Hrithik Roshan)
+- Press **Enter** or click the button to search
+- Clean, responsive UI
+
+## Tech Stack
+
+- [Next.js 14](https://nextjs.org/) (App Router)
+- React 18
+- Plain CSS
 
 ## Getting Started
-
-Clone the repository:
 
 ```bash
 git clone https://github.com/Sharmistha2023/workshop1.git
 cd workshop1
+npm install
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Deployment
+
+Deployed on [Vercel](https://vercel.com).
 
 ## Author
 
