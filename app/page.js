@@ -2,34 +2,6 @@
 
 import { useState } from "react";
 
-const movies = {
-  "aamir khan": [
-    { title: "3 Idiots", year: 2009, genre: "Comedy Drama" },
-    { title: "Lagaan", year: 2001, genre: "Period Drama" },
-    { title: "Taare Zameen Par", year: 2007, genre: "Drama" },
-  ],
-  "shah rukh khan": [
-    { title: "Swades", year: 2004, genre: "Drama" },
-    { title: "Chak De! India", year: 2007, genre: "Sports Drama" },
-    { title: "Dilwale Dulhania Le Jayenge", year: 1995, genre: "Romance" },
-  ],
-  "amitabh bachchan": [
-    { title: "Deewaar", year: 1975, genre: "Crime Drama" },
-    { title: "Sholay", year: 1975, genre: "Action Adventure" },
-    { title: "Paa", year: 2009, genre: "Drama" },
-  ],
-  "salman khan": [
-    { title: "Bajrangi Bhaijaan", year: 2015, genre: "Drama" },
-    { title: "Sultan", year: 2016, genre: "Sports Drama" },
-    { title: "Hum Aapke Hain Koun", year: 1994, genre: "Romance" },
-  ],
-  "hrithik roshan": [
-    { title: "Koi... Mil Gaya", year: 2003, genre: "Sci-Fi Drama" },
-    { title: "Jodhaa Akbar", year: 2008, genre: "Historical Romance" },
-    { title: "Zindagi Na Milegi Dobara", year: 2011, genre: "Adventure" },
-  ],
-};
-
 const suggestions = [
   { name: "Aamir Khan", color: "from-orange-500 to-pink-500" },
   { name: "Shah Rukh Khan", color: "from-blue-500 to-cyan-400" },
@@ -39,19 +11,12 @@ const suggestions = [
 ];
 
 const medalColors = [
-  { bg: "from-yellow-400 to-amber-500", text: "text-yellow-900", label: "Gold" },
-  { bg: "from-slate-300 to-slate-400", text: "text-slate-800", label: "Silver" },
-  { bg: "from-orange-400 to-amber-600", text: "text-orange-900", label: "Bronze" },
+  { bg: "from-yellow-400 to-amber-500" },
+  { bg: "from-slate-300 to-slate-400" },
+  { bg: "from-orange-400 to-amber-600" },
 ];
 
 const medals = ["🥇", "🥈", "🥉"];
-
-function toTitleCase(str) {
-  return str.replace(
-    /\w\S*/g,
-    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  );
-}
 
 export default function Home() {
   const [actor, setActor] = useState("");
@@ -59,9 +24,9 @@ export default function Home() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function search(name) {
-    const key = (name ?? actor).trim().toLowerCase();
-    if (!key) {
+  async function search(name) {
+    const query = (name ?? actor).trim();
+    if (!query) {
       setError("Please enter an actor name.");
       setResult(null);
       return;
@@ -69,14 +34,20 @@ export default function Home() {
     setLoading(true);
     setResult(null);
     setError("");
-    setTimeout(() => {
-      if (movies[key]) {
-        setResult({ name: toTitleCase(key), films: movies[key] });
+
+    try {
+      const res = await fetch(`/api/films?actor=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Something went wrong.");
       } else {
-        setError(`No results for "${toTitleCase(key)}". Try a suggested actor!`);
+        setResult(data);
       }
+    } catch {
+      setError("Failed to connect. Please try again.");
+    } finally {
       setLoading(false);
-    }, 450);
+    }
   }
 
   function handleSuggestion(name) {
@@ -85,9 +56,10 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-6"
-      style={{ background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)" }}>
-
+    <main
+      className="min-h-screen relative overflow-hidden flex items-center justify-center p-6"
+      style={{ background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)" }}
+    >
       {/* Decorative blobs */}
       <div className="absolute top-[-80px] left-[-80px] w-80 h-80 rounded-full opacity-30 blur-3xl"
         style={{ background: "radial-gradient(circle, #ff6ec7, #7873f5)" }} />
@@ -111,16 +83,17 @@ export default function Home() {
             Discover the greatest Bollywood classics
           </p>
           <div className="flex justify-center gap-1 mt-3">
-            {["#f093fb","#f5576c","#4facfe","#43e97b","#ffd200"].map((c, i) => (
+            {["#f093fb", "#f5576c", "#4facfe", "#43e97b", "#ffd200"].map((c, i) => (
               <span key={i} className="w-2 h-2 rounded-full" style={{ background: c }} />
             ))}
           </div>
         </div>
 
         {/* Search card */}
-        <div className="rounded-3xl p-6 shadow-2xl border border-white/10"
-          style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
-
+        <div
+          className="rounded-3xl p-6 shadow-2xl border border-white/10"
+          style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}
+        >
           <div className="flex gap-3 mb-5">
             <input
               type="text"
@@ -141,7 +114,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Suggestion chips */}
           <p className="text-white/40 text-xs mb-2 font-semibold uppercase tracking-widest">Quick picks</p>
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
@@ -158,8 +130,10 @@ export default function Home() {
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl px-5 py-4 border text-sm font-medium"
-            style={{ background: "rgba(239,68,68,0.15)", borderColor: "rgba(239,68,68,0.3)", color: "#fca5a5" }}>
+          <div
+            className="mt-4 rounded-2xl px-5 py-4 border text-sm font-medium"
+            style={{ background: "rgba(239,68,68,0.15)", borderColor: "rgba(239,68,68,0.3)", color: "#fca5a5" }}
+          >
             ⚠️ {error}
           </div>
         )}
@@ -176,9 +150,11 @@ export default function Home() {
           <div className="mt-6 space-y-3">
             <div className="text-center mb-4">
               <span className="text-white/50 text-xs uppercase tracking-widest font-semibold">Top 3 Films of</span>
-              <h2 className="text-2xl font-black text-transparent bg-clip-text"
-                style={{ backgroundImage: "linear-gradient(135deg, #f093fb, #f5576c, #ffd200)" }}>
-                {result.name}
+              <h2
+                className="text-2xl font-black text-transparent bg-clip-text"
+                style={{ backgroundImage: "linear-gradient(135deg, #f093fb, #f5576c, #ffd200)" }}
+              >
+                {result.actor}
               </h2>
             </div>
 
@@ -188,24 +164,21 @@ export default function Home() {
                 className="rounded-2xl p-4 flex items-center gap-4 border border-white/10 hover:scale-[1.02] transition-transform cursor-default"
                 style={{ background: "rgba(255,255,255,0.06)", backdropFilter: "blur(10px)" }}
               >
-                {/* Rank badge */}
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black bg-gradient-to-br ${medalColors[i].bg} shadow-lg flex-shrink-0`}>
                   {medals[i]}
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-base truncate">{film.title}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs rounded-full px-2 py-0.5 font-semibold"
-                      style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
+                    <span
+                      className="text-xs rounded-full px-2 py-0.5 font-semibold"
+                      style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}
+                    >
                       {film.genre}
                     </span>
                     <span className="text-white/30 text-xs">{film.year}</span>
                   </div>
                 </div>
-
-                {/* Number */}
                 <span className="text-3xl font-black text-white/10">#{i + 1}</span>
               </div>
             ))}
@@ -213,7 +186,7 @@ export default function Home() {
         )}
 
         <p className="text-center text-white/20 text-xs mt-10 font-medium tracking-wide">
-          Built with Next.js · Tailwind CSS · ❤️
+          Built with Next.js · Tailwind CSS · Neon DB · ❤️
         </p>
       </div>
     </main>
