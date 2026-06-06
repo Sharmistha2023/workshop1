@@ -1,14 +1,21 @@
 import "./globals.css";
+import Providers from "./providers";
+import Navbar from "@/components/Navbar";
 
 export const metadata = {
-  title: "Top 3 Films Finder",
-  description: "Find top 3 films of your favourite Bollywood actors",
+  title: "Films Finder",
+  description: "Discover the greatest Bollywood classics",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }
