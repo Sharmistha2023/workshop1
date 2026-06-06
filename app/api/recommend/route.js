@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { chat } from "@/lib/llm";
+import sql from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-import sql from "@/lib/db";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -11,6 +11,10 @@ export async function GET(request) {
   if (!actor) {
     return NextResponse.json({ error: "Actor name is required." }, { status: 400 });
   }
+
+  // Get all actor names already in DB so LLM avoids repeating them
+  const allActors = await sql`SELECT name FROM actors ORDER BY name`;
+  const knownActors = allActors.map(a => a.name).join(", ");
 
   const films = await sql`
     SELECT f.title, f.year, f.genre
@@ -28,11 +32,23 @@ export async function GET(request) {
   const filmList = films.map(f => `"${f.title}" (${f.year}, ${f.genre})`).join(", ");
 
   const recommendation = await chat(
-    `Given that someone loves these films by ${actor}: ${filmList} — suggest 3 other films (any actor, any era) they would enjoy. Format as a numbered list with one sentence explanation each.`,
+    `A user's favourite films by ${actor} are: ${filmList}.
+
+Based on those specific films' themes, tone, and genre — recommend exactly 3 films they would love.
+
+STRICT RULES:
+- Do NOT recommend any film by ${actor}
+- Do NOT recommend films already listed: ${filmList}
+- Do NOT recommend films by these actors (already in their library): ${knownActors}
+- Pick films from DIFFERENT actors, different eras, different languages (Hollywood, world cinema, other Bollywood directors)
+- Base your picks on the SPECIFIC themes/tone of the listed films, not just "popular Bollywood films"
+
+Format each as:
+1. **Film Title** (Year) — one sentence explaining why it matches their taste.`,
     {
-      system: "You are a film expert specialising in world cinema with deep knowledge of Bollywood, Hollywood, and international films. Keep responses concise and enthusiastic.",
-      temperature: 0.8,
-      max_tokens: 400,
+      system: "You are a world cinema curator. You give highly personalised, specific recommendations based on film themes and tone — never generic top-lists. You strictly follow all rules given.",
+      temperature: 0.7,
+      max_tokens: 450,
     }
   );
 
