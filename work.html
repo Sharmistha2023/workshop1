@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top 3 Films Finder</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    .result {
+        margin-top: 20px;
+    }
+
+    .movie {
+        background: #f8f9fa;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .error {
+        color: red;
+        margin-top: 15px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Top 3 Films Finder</h1>
+
+    <input
+        type="text"
+        id="actorInput"
+        placeholder="Enter actor name (e.g. Aamir Khan)"
+    >
+
+    <button onclick="getMovies()">Show Top 3 Films</button>
+
+    <div id="result" class="result"></div>
+</div>
+
+<script>
+const movies = {
+    "aamir khan": [
+        "3 Idiots",
+        "Lagaan",
+        "Taare Zameen Par"
+    ],
+    "shah rukh khan": [
+        "Swades",
+        "Chak De! India",
+        "Dilwale Dulhania Le Jayenge"
+    ],
+    "amitabh bachchan": [
+        "Deewaar",
+        "Sholay",
+        "Paa"
+    ],
+    "salman khan": [
+        "Bajrangi Bhaijaan",
+        "Sultan",
+        "Hum Aapke Hain Koun"
+    ],
+    "hrithik roshan": [
+        "Koi... Mil Gaya",
+        "Jodhaa Akbar",
+        "Zindagi Na Milegi Dobara"
+    ]
+};
+
+function getMovies() {
+    const actor = document
+        .getElementById("actorInput")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const resultDiv = document.getElementById("result");
+
+    if (!actor) {
+        resultDiv.innerHTML =
+            '<div class="error">Please enter an actor name.</div>';
+        return;
+    }
+
+    if (movies[actor]) {
+        let html = `<h3>Top 3 Films of ${toTitleCase(actor)}</h3>`;
+
+        movies[actor].forEach((movie, index) => {
+            html += `
+                <div class="movie">
+                    <strong>${index + 1}.</strong> ${movie}
+                </div>
+            `;
+        });
+
+        resultDiv.innerHTML = html;
+    } else {
+        resultDiv.innerHTML = `
+            <div class="error">
+                Actor not found. Add "${toTitleCase(actor)}" to the movie database.
+            </div>
+        `;
+    }
+}
+
+function toTitleCase(str) {
+    return str.replace(
+        /\w\S*/g,
+        txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+}
+
+document
+    .getElementById("actorInput")
+    .addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            getMovies();
+        }
+    });
+</script>
+
+</body>
+</html>
