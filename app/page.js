@@ -203,6 +203,22 @@ export default function Home() {
               </button>
             ))}
 
+            {/* Share card */}
+            <button
+              onClick={() => {
+                const text = `🎬 My Top 3 Films by ${result.actor}:\n${result.films.map((f,i) => `${medals[i]} ${f.title} (${f.year})`).join("\n")}\n\nDiscover yours at Films Finder!`;
+                if (navigator.share) {
+                  navigator.share({ title: `Top 3 Films: ${result.actor}`, text });
+                } else {
+                  navigator.clipboard.writeText(text);
+                  alert("Copied to clipboard!");
+                }
+              }}
+              className="w-full rounded-2xl p-3 flex items-center justify-center gap-2 border border-white/10 hover:border-purple-500/40 transition text-xs font-semibold text-white/50 hover:text-white/80"
+              style={{ background: "rgba(255,255,255,0.04)" }}>
+              🔗 Share this list
+            </button>
+
             {/* AI Recommendations */}
             <div className="mt-4 rounded-2xl border border-purple-500/20 overflow-hidden"
               style={{ background: "rgba(168,85,247,0.07)" }}>

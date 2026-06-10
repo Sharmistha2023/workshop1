@@ -18,6 +18,16 @@ export default function Navbar() {
         <Link href="/progress" className="text-white/50 hover:text-white text-xs font-semibold transition">
           Progress
         </Link>
+        {session && (
+          <Link href="/watchlist" className="text-white/50 hover:text-white text-xs font-semibold transition">
+            Watchlist
+          </Link>
+        )}
+        {session && (
+          <Link href={`/profile/${session.user.id}`} className="text-white/50 hover:text-white text-xs font-semibold transition">
+            Profile
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
