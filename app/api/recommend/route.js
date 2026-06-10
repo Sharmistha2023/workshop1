@@ -27,19 +27,26 @@ export async function GET(request) {
 
   const filmList = films.map(f => `"${f.title}" (${f.year}, ${f.genre})`).join(", ");
 
+  const themes = films.map(f => `${f.title} (${f.genre})`).join(", ");
+
   const recommendation = await chat(
-    `A user loves these films by ${actor}: ${filmList}.
-
-Recommend exactly 3 films from OTHER actors and directors that match these films' themes and tone.
-Do NOT recommend any film by ${actor} or any of the films already listed above.
-
-Output only the 3 recommendations — no preamble, no self-correction, no commentary. Use this exact format:
-1. **Film Title** (Year) — one sentence on why it matches their taste.
-2. **Film Title** (Year) — one sentence on why it matches their taste.
-3. **Film Title** (Year) — one sentence on why it matches their taste.`,
+    [
+      {
+        role: "user",
+        content: `These are the themes and genres I enjoy: ${themes}. The actor is ${actor}.`,
+      },
+      {
+        role: "assistant",
+        content: `Understood. I will recommend 3 films that match those themes. I will only suggest films by directors and actors other than ${actor}, and I will not repeat any of the films you already listed. Here are my 3 recommendations:`,
+      },
+      {
+        role: "user",
+        content: `Yes — give me exactly those 3 recommendations now. Each on its own numbered line in this format:\n1. **Title** (Year) — one sentence why it fits.\n2. **Title** (Year) — one sentence why it fits.\n3. **Title** (Year) — one sentence why it fits.`,
+      },
+    ],
     {
-      system: "You are a world cinema curator. Output ONLY the numbered list — no thinking aloud, no corrections, no extra text before or after.",
-      temperature: 0.3,
+      system: "You are a world cinema curator. Recommend films from diverse directors and industries (Hollywood, European, Asian, independent). Never recommend films by the actor the user already knows.",
+      temperature: 0.4,
       max_tokens: 350,
     }
   );
