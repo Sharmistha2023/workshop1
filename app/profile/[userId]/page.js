@@ -4,12 +4,89 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 function StarDisplay({ value }) {
   return (
     <span className="text-yellow-400 text-xs">
       {"★".repeat(value)}{"☆".repeat(5 - value)}
     </span>
+  );
+}
+
+function ApiKeyManager() {
+  const [keys, setKeys]     = useState([]);
+  const [label, setLabel]   = useState("");
+  const [newKey, setNewKey] = useState(null);
+  const [loading, setLoad]  = useState(true);
+
+  useEffect(() => {
+    fetch("/api/apikeys").then(r => r.json()).then(d => { setKeys(Array.isArray(d) ? d : []); setLoad(false); });
+  }, []);
+
+  async function generate() {
+    const res = await fetch("/api/apikeys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setNewKey(data.key);
+      setLabel("");
+      setKeys(prev => [{ id: Date.now(), key_prefix: data.prefix, label: data.label, last_used_at: null, created_at: new Date().toISOString() }, ...prev]);
+    }
+  }
+
+  async function remove(id) {
+    await fetch("/api/apikeys", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setKeys(prev => prev.filter(k => k.id !== id));
+  }
+
+  return (
+    <div className="mt-8">
+      <p className="text-white/40 text-xs uppercase tracking-widest font-semibold mb-3">
+        🔌 API Keys — <Link href="/docs" className="text-purple-400 hover:underline">View Docs</Link>
+      </p>
+      {newKey && (
+        <div className="rounded-2xl p-4 border border-green-500/30 mb-3"
+          style={{ background: "rgba(74,222,128,0.07)" }}>
+          <p className="text-green-400 text-xs font-bold mb-1">New API Key — copy it now, it won&apos;t be shown again!</p>
+          <code className="text-green-300 text-xs break-all">{newKey}</code>
+          <button onClick={() => { navigator.clipboard.writeText(newKey); }}
+            className="ml-3 text-xs text-green-400 underline">Copy</button>
+        </div>
+      )}
+      <div className="flex gap-2 mb-3">
+        <input value={label} onChange={e => setLabel(e.target.value)}
+          placeholder="Key label (optional)"
+          className="flex-1 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 border border-white/10 focus:outline-none"
+          style={{ background: "rgba(255,255,255,0.07)" }} />
+        <button onClick={generate}
+          className="px-4 py-2 rounded-xl text-xs font-bold text-white"
+          style={{ background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
+          + Generate
+        </button>
+      </div>
+      {loading ? (
+        <p className="text-white/30 text-sm">Loading keys…</p>
+      ) : keys.length === 0 ? (
+        <p className="text-white/30 text-sm">No API keys yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {keys.map(k => (
+            <div key={k.id} className="flex items-center justify-between rounded-xl px-4 py-2 border border-white/10"
+              style={{ background: "rgba(255,255,255,0.04)" }}>
+              <div>
+                <p className="text-white text-sm font-medium">{k.label}</p>
+                <p className="text-white/30 text-xs">{k.key_prefix}… · Created {new Date(k.created_at).toLocaleDateString()}</p>
+              </div>
+              <button onClick={() => remove(k.id)} className="text-red-400/60 hover:text-red-400 text-xs transition">Revoke</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -137,6 +214,8 @@ export default function ProfilePage() {
         {profile.watchlist.length === 0 && profile.reviews.length === 0 && (
           <p className="text-center text-white/30 text-sm mt-8">No activity yet.</p>
         )}
+
+        {isOwnProfile && <ApiKeyManager />}
       </div>
     </main>
   );

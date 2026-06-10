@@ -93,7 +93,23 @@ function ReviewSection({ filmId, session }) {
   );
 }
 
-function StreamingSection({ filmId }) {
+const PLATFORM_LINKS = {
+  "Netflix":       "https://www.netflix.com/search?q=",
+  "Amazon Prime Video": "https://www.primevideo.com/search/ref=atv_sr_sug_3?phrase=",
+  "Disney+ Hotstar": "https://www.hotstar.com/in/search?q=",
+  "Apple TV+":     "https://tv.apple.com/",
+  "JioCinema":     "https://www.jiocinema.com/search/",
+  "ZEE5":          "https://www.zee5.com/search/",
+  "SonyLIV":       "https://www.sonyliv.com/search/",
+};
+
+function affiliateUrl(name, title) {
+  const base = PLATFORM_LINKS[name];
+  if (!base) return null;
+  return base + encodeURIComponent(title) + "?ref=filmsfinder&utm_source=filmsfinder&utm_medium=referral";
+}
+
+function StreamingSection({ filmId, filmTitle }) {
   const [data, setData] = useState(undefined);
 
   useEffect(() => {
@@ -112,19 +128,100 @@ function StreamingSection({ filmId }) {
       style={{ background: "rgba(255,255,255,0.04)" }}>
       <p className="text-white/40 text-xs uppercase tracking-widest font-semibold mb-3">Where to Watch</p>
       <div className="flex flex-wrap gap-2">
-        {flatrate.map(p => (
-          <span key={p.provider_id} className="text-xs font-semibold rounded-xl px-3 py-1.5"
-            style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.2)" }}>
-            ▶ {p.provider_name}
-          </span>
-        ))}
-        {rent.map(p => (
-          <span key={p.provider_id} className="text-xs font-semibold rounded-xl px-3 py-1.5"
-            style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
-            💰 Rent: {p.provider_name}
-          </span>
-        ))}
+        {flatrate.map(p => {
+          const url = affiliateUrl(p.provider_name, filmTitle);
+          return url ? (
+            <a key={p.provider_id} href={url} target="_blank" rel="noopener noreferrer"
+              className="text-xs font-semibold rounded-xl px-3 py-1.5 hover:scale-105 transition-transform"
+              style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.2)" }}>
+              ▶ {p.provider_name} ↗
+            </a>
+          ) : (
+            <span key={p.provider_id} className="text-xs font-semibold rounded-xl px-3 py-1.5"
+              style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.2)" }}>
+              ▶ {p.provider_name}
+            </span>
+          );
+        })}
+        {rent.map(p => {
+          const url = affiliateUrl(p.provider_name, filmTitle);
+          return url ? (
+            <a key={p.provider_id} href={url} target="_blank" rel="noopener noreferrer"
+              className="text-xs font-semibold rounded-xl px-3 py-1.5 hover:scale-105 transition-transform"
+              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
+              💰 Rent: {p.provider_name} ↗
+            </a>
+          ) : (
+            <span key={p.provider_id} className="text-xs font-semibold rounded-xl px-3 py-1.5"
+              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
+              💰 Rent: {p.provider_name}
+            </span>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+function SuggestEditSection({ filmId, session }) {
+  const [open, setOpen]     = useState(false);
+  const [field, setField]   = useState("overview");
+  const [value, setValue]   = useState("");
+  const [reason, setReason] = useState("");
+  const [status, setStatus] = useState(null);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!value) return;
+    setStatus("saving");
+    const res = await fetch("/api/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entityType: "film", entityId: Number(filmId), fieldName: field, suggestedValue: value, reason }),
+    });
+    const data = await res.json();
+    setStatus(res.ok ? "done" : "error");
+    if (res.ok) { setValue(""); setReason(""); }
+  }
+
+  if (!session) return null;
+
+  return (
+    <div className="mt-4">
+      <button onClick={() => setOpen(!open)}
+        className="text-xs text-white/30 hover:text-white/60 transition flex items-center gap-1">
+        ✏️ Suggest an edit to this film
+      </button>
+      {open && (
+        <form onSubmit={submit} className="mt-3 rounded-2xl border border-white/10 p-4"
+          style={{ background: "rgba(255,255,255,0.04)" }}>
+          <p className="text-white text-sm font-semibold mb-3">Suggest a correction</p>
+          <select value={field} onChange={e => setField(e.target.value)}
+            className="w-full rounded-xl px-3 py-2 text-sm text-white border border-white/10 mb-2 focus:outline-none"
+            style={{ background: "rgba(255,255,255,0.08)" }}>
+            <option value="overview">Plot overview</option>
+            <option value="genre">Genre</option>
+            <option value="year">Release year</option>
+            <option value="poster_url">Poster URL</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea value={value} onChange={e => setValue(e.target.value)}
+            placeholder="Correct value…" rows={2}
+            className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 border border-white/10 mb-2 focus:outline-none resize-none"
+            style={{ background: "rgba(255,255,255,0.06)" }} />
+          <input value={reason} onChange={e => setReason(e.target.value)}
+            placeholder="Reason (optional)"
+            className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 border border-white/10 mb-2 focus:outline-none"
+            style={{ background: "rgba(255,255,255,0.06)" }} />
+          <button type="submit" disabled={!value || status === "saving"}
+            className="px-4 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40 transition"
+            style={{ background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
+            {status === "saving" ? "Submitting…" : "Submit Suggestion"}
+          </button>
+          {status === "done" && <span className="ml-3 text-green-400 text-xs">✓ Submitted! Thank you.</span>}
+          {status === "error" && <span className="ml-3 text-red-400 text-xs">Failed. Try again.</span>}
+        </form>
+      )}
     </div>
   );
 }
@@ -270,7 +367,7 @@ export default function FilmPage() {
           )}
         </div>
 
-        <StreamingSection filmId={id} />
+        <StreamingSection filmId={id} filmTitle={film.title} />
 
         {film.same_actor_films?.length > 0 && (
           <div className="mt-4">
@@ -294,6 +391,7 @@ export default function FilmPage() {
         )}
 
         <ReviewSection filmId={id} session={session} />
+        <SuggestEditSection filmId={id} session={session} />
       </div>
     </main>
   );

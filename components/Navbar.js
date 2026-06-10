@@ -11,12 +11,24 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 border-b border-white/10"
       style={{ background: "rgba(15,12,41,0.85)", backdropFilter: "blur(16px)" }}>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 flex-wrap">
         <Link href="/" className="flex items-center gap-2 font-black text-white text-lg">
-          🎬 <span>Films Finder</span>
+          🎬 <span className="hidden sm:block">Films Finder</span>
         </Link>
-        <Link href="/progress" className="text-white/50 hover:text-white text-xs font-semibold transition">
-          Progress
+        <Link href="/trending" className="text-white/50 hover:text-white text-xs font-semibold transition">
+          Trending
+        </Link>
+        <Link href="/regional" className="text-white/50 hover:text-white text-xs font-semibold transition">
+          Regional
+        </Link>
+        <Link href="/analytics" className="text-white/50 hover:text-white text-xs font-semibold transition hidden sm:block">
+          Analytics
+        </Link>
+        <Link href="/docs" className="text-white/50 hover:text-white text-xs font-semibold transition hidden sm:block">
+          API
+        </Link>
+        <Link href="/premium" className="text-yellow-400/70 hover:text-yellow-400 text-xs font-semibold transition">
+          👑 Premium
         </Link>
         {session && (
           <Link href="/watchlist" className="text-white/50 hover:text-white text-xs font-semibold transition">

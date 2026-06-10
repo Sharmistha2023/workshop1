@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "statusBar": {
+    "enabled": true,
+    "content": "Films Finder | Phase 1+2 Complete | Deployed: workshop1-woad.vercel.app"
+  }
+}
+
