@@ -42,7 +42,7 @@ export default async function AnalyticsPage() {
       LEFT JOIN watchlist w ON w.film_id = f.id
       LEFT JOIN watch_history wh ON wh.film_id = f.id
       GROUP BY a.id
-      ORDER BY total_saves + total_watches DESC
+      ORDER BY COUNT(DISTINCT w.id) + COUNT(DISTINCT wh.id) DESC
       LIMIT 8
     `,
     sql`
