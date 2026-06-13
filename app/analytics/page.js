@@ -61,7 +61,7 @@ export default async function AnalyticsPage() {
       LEFT JOIN reviews r ON r.user_id = u.id
       LEFT JOIN watch_history wh ON wh.user_id = u.id
       GROUP BY u.id
-      ORDER BY saves + reviews + watches DESC
+      ORDER BY COUNT(DISTINCT w.id) + COUNT(DISTINCT r.id) + COUNT(DISTINCT wh.id) DESC
       LIMIT 10
     `,
     sql`
